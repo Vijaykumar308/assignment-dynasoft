@@ -12,6 +12,7 @@ export function App() {
         <Route path="/analytics" element={<PlaceholderPage />} />
         <Route path="/knowledge-base" element={<PlaceholderPage />} />
         <Route path="/marketing-events" element={<PlaceholderPage />} />
+        <Route path="/prospects/:prospectId" element={<PlaceholderPage />} />
         <Route path="/agents/:agentId/settings" element={<PlaceholderPage />} />
         <Route path="/profile" element={<PlaceholderPage />} />
       </Route>

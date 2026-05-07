@@ -1,19 +1,13 @@
-import { useQuery } from '@tanstack/react-query'
 import { Avatar } from '../ui/Avatar'
 import type { User } from '../../types'
-import { summary as fallbackSummary } from '../../data/prospects'
-import { fetchSummary } from '../../data/summary'
+import { useSummary } from '../../hooks/useSummary'
 
 interface GreetingBarProps {
   user: User
 }
 
 export function GreetingBar({ user }: GreetingBarProps) {
-  const { data: summary = fallbackSummary } = useQuery({
-    queryKey: ['summary'],
-    queryFn: fetchSummary,
-    refetchInterval: 30_000,
-  })
+  const { data: summary } = useSummary()
 
   return (
     <div className="flex items-center gap-3 px-6 py-4">

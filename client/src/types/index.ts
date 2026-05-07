@@ -66,10 +66,18 @@ export interface Summary {
 
 export type DashboardTab = 'hunt' | 'activate' | 'inbox'
 export type DashboardView = 'contacts' | 'accounts'
+export type SortDirection = 'asc' | 'desc'
 
 export interface ProspectFilters {
   stages: ProspectStage[]
   signalTypes: SignalType[]
   goal: string
   dateRange: '7d' | '30d' | '90d' | 'custom' | ''
+}
+
+export type FilterState = ProspectFilters
+
+export interface SortState {
+  column: string
+  direction: SortDirection
 }

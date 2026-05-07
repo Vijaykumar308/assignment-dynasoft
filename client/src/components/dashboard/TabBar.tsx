@@ -1,5 +1,6 @@
 import { Inbox, Radar, RefreshCw } from 'lucide-react'
 import type { DashboardTab, Summary } from '../../types'
+import { TabBar as UITabBar } from '../ui/TabBar'
 
 interface TabBarProps {
   activeTab: DashboardTab
@@ -14,41 +15,20 @@ const tabs = [
 ] as const
 
 export function TabBar({ activeTab, onTabChange, summary }: TabBarProps) {
-  const counts = {
-    hunt: summary.prospectsToHunt,
-    activate: summary.contactsToNurture,
-    inbox: summary.repliesWaiting,
-  }
-
   return (
-    <div role="tablist" aria-label="Outbound engine queues" className="flex gap-6 border-t border-gray-100 px-6">
-      {tabs.map((tab) => {
-        const Icon = tab.icon
-        const isActive = activeTab === tab.id
-
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            id={`${tab.id}-tab`}
-            aria-selected={isActive}
-            aria-controls={`${tab.id}-panel`}
-            onClick={() => onTabChange(tab.id)}
-            className={`inline-flex items-center gap-2 border-b-2 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-              isActive
-                ? 'border-indigo-600 font-medium text-indigo-600'
-                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-            }`}
-          >
-            <Icon className="h-4 w-4" aria-hidden="true" />
-            <span>{tab.label}</span>
-            <span className={`rounded-full px-2 py-0.5 text-xs font-medium text-white ${tab.badgeClassName}`}>
-              {counts[tab.id]}
-            </span>
-          </button>
-        )
-      })}
-    </div>
+    <UITabBar
+      ariaLabel="Outbound engine queues"
+      activeTab={activeTab}
+      onChange={onTabChange}
+      tabs={tabs.map((tab) => ({
+        ...tab,
+        count:
+          tab.id === 'hunt'
+            ? summary.prospectsToHunt
+            : tab.id === 'activate'
+              ? summary.contactsToNurture
+              : summary.repliesWaiting,
+      }))}
+    />
   )
 }
