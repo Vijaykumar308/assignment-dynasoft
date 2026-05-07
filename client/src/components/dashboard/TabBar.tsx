@@ -1,27 +1,34 @@
-const tabs = [
-  { label: 'Hunt', count: 12 },
-  { label: 'Activate', count: 8 },
-  { label: 'Inbox', count: 4 },
-]
+import { Inbox, Radar, RefreshCw } from 'lucide-react'
+import type { DashboardTab, Summary } from '../../types'
+import { TabBar as UITabBar } from '../ui/TabBar'
 
-export function TabBar() {
+interface TabBarProps {
+  activeTab: DashboardTab
+  onTabChange: (tab: DashboardTab) => void
+  summary: Summary
+}
+
+const tabs = [
+  { id: 'hunt', label: 'Hunt', icon: Radar, badgeClassName: 'bg-indigo-600' },
+  { id: 'activate', label: 'Activate', icon: RefreshCw, badgeClassName: 'bg-green-600' },
+  { id: 'inbox', label: 'Inbox', icon: Inbox, badgeClassName: 'bg-amber-500' },
+] as const
+
+export function TabBar({ activeTab, onTabChange, summary }: TabBarProps) {
   return (
-    <div role="tablist" aria-label="Outbound engine queues" className="flex gap-6 border-t border-gray-100 px-6">
-      {tabs.map((tab, index) => (
-        <button
-          key={tab.label}
-          type="button"
-          role="tab"
-          aria-selected={index === 0}
-          className={`border-b-2 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-            index === 0
-              ? 'border-indigo-600 text-indigo-600'
-              : 'border-transparent text-gray-500 hover:text-gray-900'
-          }`}
-        >
-          {tab.label} {tab.count}
-        </button>
-      ))}
-    </div>
+    <UITabBar
+      ariaLabel="Outbound engine queues"
+      activeTab={activeTab}
+      onChange={onTabChange}
+      tabs={tabs.map((tab) => ({
+        ...tab,
+        count:
+          tab.id === 'hunt'
+            ? summary.prospectsToHunt
+            : tab.id === 'activate'
+              ? summary.contactsToNurture
+              : summary.repliesWaiting,
+      }))}
+    />
   )
 }

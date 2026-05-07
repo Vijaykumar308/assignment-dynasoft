@@ -1,6 +1,10 @@
 interface AvatarProps {
   name: string
-  size?: 'sm' | 'md'
+  size?: 'sm' | 'md' | 'lg'
+  src?: string
+  colorIndex?: number
+  colorClassName?: string
+  fallback?: string
 }
 
 const avatarColors = [
@@ -20,20 +24,37 @@ function getInitials(name: string) {
     .toUpperCase()
 }
 
-function getColor(name: string) {
+function getColor(name: string, colorIndex?: number) {
+  if (typeof colorIndex === 'number') {
+    return avatarColors[Math.abs(colorIndex) % avatarColors.length]
+  }
+
   const total = [...name].reduce((sum, character) => sum + character.charCodeAt(0), 0)
   return avatarColors[total % avatarColors.length]
 }
 
-export function Avatar({ name, size = 'md' }: AvatarProps) {
-  const sizeClass = size === 'sm' ? 'h-7 w-7 text-xs' : 'h-8 w-8 text-sm'
+export function Avatar({ name, size = 'md', src, colorIndex, colorClassName, fallback }: AvatarProps) {
+  const sizeClass =
+    size === 'sm' ? 'h-7 w-7 text-xs' : size === 'lg' ? 'h-10 w-10 text-sm' : 'h-8 w-8 text-sm'
+
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={`${name} avatar`}
+        className={`inline-flex shrink-0 rounded-full object-cover ${sizeClass}`}
+      />
+    )
+  }
 
   return (
     <span
       aria-label={`${name} avatar`}
-      className={`inline-flex shrink-0 items-center justify-center rounded-full font-medium ${sizeClass} ${getColor(name)}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full font-medium ${sizeClass} ${
+        colorClassName ?? getColor(name, colorIndex)
+      }`}
     >
-      {getInitials(name)}
+      {fallback ?? getInitials(name)}
     </span>
   )
 }

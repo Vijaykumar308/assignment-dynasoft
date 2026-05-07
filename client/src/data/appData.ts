@@ -7,6 +7,8 @@ export const currentUser: User = {
   workspace: 'NXL',
   role: 'Account Executive',
   status: 'online',
+  avatarColor: 'bg-indigo-600 text-white',
+  avatarEmoji: 'L',
 }
 
 export const primaryNavigation: NavItem[] = [

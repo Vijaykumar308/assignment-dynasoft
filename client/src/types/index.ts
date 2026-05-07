@@ -6,6 +6,8 @@ export interface User {
   workspace: string
   role: string
   status: 'online' | 'offline'
+  avatarColor?: string
+  avatarEmoji?: string
 }
 
 export interface NavItem {
@@ -35,8 +37,47 @@ export interface Prospect {
   name: string
   title: string
   company: string
+  domain: string
+  companySize: string
+  industry: string
   stage: ProspectStage
   goal: string
   signal: ProspectSignal
   action: string
+  replied?: boolean
+  replyPreview?: string
+}
+
+export interface Account {
+  id: string
+  companyName: string
+  domain: string
+  size: string
+  industry: string
+  signals: ProspectSignal[]
+  recommendedAction: string
+}
+
+export interface Summary {
+  prospectsToHunt: number
+  contactsToNurture: number
+  repliesWaiting: number
+}
+
+export type DashboardTab = 'hunt' | 'activate' | 'inbox'
+export type DashboardView = 'contacts' | 'accounts'
+export type SortDirection = 'asc' | 'desc'
+
+export interface ProspectFilters {
+  stages: ProspectStage[]
+  signalTypes: SignalType[]
+  goal: string
+  dateRange: '7d' | '30d' | '90d' | 'custom' | ''
+}
+
+export type FilterState = ProspectFilters
+
+export interface SortState {
+  column: string
+  direction: SortDirection
 }

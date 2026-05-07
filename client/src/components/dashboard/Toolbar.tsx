@@ -1,49 +1,115 @@
-import { Filter, Search, Upload } from 'lucide-react'
+import { Filter, Upload } from 'lucide-react'
+import { useState } from 'react'
+import { emptyFilters, useDashboardStore } from '../../store/dashboardStore'
+import type { DashboardView, FilterState } from '../../types'
+import { FilterSheet } from '../ui/FilterSheet'
+import { SearchInput } from '../ui/SearchInput'
+import { UploadModal } from '../ui/UploadModal'
+import { ViewToggle } from '../ui/ViewToggle'
 
-export function Toolbar() {
+interface ToolbarProps {
+  contactsCount: number
+  accountsCount: number
+  isSearching?: boolean
+}
+
+function getActiveFilterCount(filters: FilterState) {
+  return (
+    filters.stages.length +
+    filters.signalTypes.length +
+    (filters.goal ? 1 : 0) +
+    (filters.dateRange ? 1 : 0)
+  )
+}
+
+function syncFiltersToUrl(filters: FilterState) {
+  const params = new URLSearchParams(window.location.search)
+
+  if (filters.stages.length) params.set('stage', filters.stages.join(','))
+  else params.delete('stage')
+
+  if (filters.signalTypes.length) params.set('signal', filters.signalTypes.join(','))
+  else params.delete('signal')
+
+  if (filters.goal) params.set('goal', filters.goal)
+  else params.delete('goal')
+
+  if (filters.dateRange) params.set('dateRange', filters.dateRange)
+  else params.delete('dateRange')
+
+  const nextQuery = params.toString()
+  window.history.replaceState(null, '', nextQuery ? `${window.location.pathname}?${nextQuery}` : window.location.pathname)
+}
+
+export function Toolbar({ contactsCount, accountsCount, isSearching = false }: ToolbarProps) {
+  const activeView = useDashboardStore((state) => state.activeView)
+  const searchQuery = useDashboardStore((state) => state.searchQuery)
+  const filterState = useDashboardStore((state) => state.filterState)
+  const setActiveView = useDashboardStore((state) => state.setActiveView)
+  const setSearchQuery = useDashboardStore((state) => state.setSearchQuery)
+  const setFilterState = useDashboardStore((state) => state.setFilterState)
+  const resetFilters = useDashboardStore((state) => state.resetFilters)
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [isUploadOpen, setIsUploadOpen] = useState(false)
+  const activeFilterCount = getActiveFilterCount(filterState)
+
+  const updateFilters = (filters: FilterState) => {
+    syncFiltersToUrl(filters)
+    setFilterState(filters)
+  }
+
+  const clearFilters = () => {
+    syncFiltersToUrl(emptyFilters)
+    resetFilters()
+  }
+
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1" aria-label="View toggle">
-        <button
-          type="button"
-          className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-        >
-          Contacts
-        </button>
-        <button
-          type="button"
-          className="rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-        >
-          Accounts
-        </button>
-      </div>
+      <ViewToggle<DashboardView>
+        ariaLabel="View toggle"
+        value={activeView}
+        onChange={setActiveView}
+        options={[
+          { value: 'contacts', label: `Contacts (${contactsCount})` },
+          { value: 'accounts', label: `Accounts (${accountsCount})` },
+        ]}
+      />
 
       <div className="flex flex-1 flex-col gap-3 sm:max-w-2xl sm:flex-row">
-        <label className="relative flex-1">
-          <span className="sr-only">Search prospects</span>
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="search"
-            placeholder="Search prospects or companies"
-            className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </label>
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          onClear={() => setSearchQuery('')}
+          placeholder="Search by prospect, signal, account..."
+          isLoading={isSearching}
+        />
 
         <button
           type="button"
-          className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          onClick={() => setIsFilterOpen(true)}
+          className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors duration-150 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 active:scale-[0.98]"
         >
           <Filter className="h-4 w-4" aria-hidden="true" />
-          Filters
+          Filters{activeFilterCount ? ` (${activeFilterCount})` : ''}
         </button>
         <button
           type="button"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          onClick={() => setIsUploadOpen(true)}
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:scale-[0.98]"
         >
           <Upload className="h-4 w-4" aria-hidden="true" />
           Upload
         </button>
       </div>
+
+      <FilterSheet
+        open={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        filters={filterState}
+        onChange={updateFilters}
+        onReset={clearFilters}
+      />
+      <UploadModal open={isUploadOpen} onClose={() => setIsUploadOpen(false)} />
     </div>
   )
 }
