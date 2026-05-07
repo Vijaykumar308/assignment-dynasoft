@@ -68,6 +68,7 @@ export function useProspects(filters: FilterState, view: DashboardView, searchQu
   return useQuery({
     queryKey: ['prospects', filters, view],
     queryFn: () => fetchProspects(filters, view),
+    placeholderData: (previousData) => previousData,
     staleTime: 60_000,
     gcTime: 300_000,
     select: (data) => {

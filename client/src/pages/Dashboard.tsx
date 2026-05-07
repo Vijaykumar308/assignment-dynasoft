@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { HuntQueueTable } from '../components/dashboard/HuntQueueTable'
 import { Toolbar } from '../components/dashboard/Toolbar'
 import { accounts as fallbackAccounts, prospects as fallbackProspects } from '../data/prospects'
@@ -68,10 +68,30 @@ export function Dashboard() {
   const resetFilters = useDashboardStore((state) => state.resetFilters)
   const { data, isLoading, isFetching } = useProspects(filterState, activeView, searchQuery, sortState)
   const inboxItems = useMemo(() => fallbackProspects.filter((prospect) => prospect.replied), [])
+  const [renderedView, setRenderedView] = useState(activeView)
+  const [viewPhase, setViewPhase] = useState<'idle' | 'out' | 'in'>('idle')
 
   useEffect(() => {
     setFilterState(readFiltersFromUrl())
   }, [setFilterState])
+
+  useEffect(() => {
+    if (activeView === renderedView) {
+      return
+    }
+
+    setViewPhase('out')
+    const swapTimer = window.setTimeout(() => {
+      setRenderedView(activeView)
+      setViewPhase('in')
+    }, 140)
+    const settleTimer = window.setTimeout(() => setViewPhase('idle'), 320)
+
+    return () => {
+      window.clearTimeout(swapTimer)
+      window.clearTimeout(settleTimer)
+    }
+  }, [activeView, renderedView])
 
   const clearFilters = () => {
     clearFilterUrl()
@@ -88,13 +108,23 @@ export function Dashboard() {
             accountsCount={fallbackAccounts.length}
             isSearching={isFetching && !isLoading}
           />
-          <HuntQueueTable
-            view={activeView}
-            prospects={data?.prospects ?? []}
-            accounts={data?.accounts ?? []}
-            isLoading={isLoading}
-            onClearFilters={clearFilters}
-          />
+          <div
+            className={`transition-all duration-200 ease-out ${
+              viewPhase === 'out'
+                ? 'translate-y-1 opacity-0'
+                : viewPhase === 'in'
+                  ? 'translate-y-0 opacity-100'
+                  : 'translate-y-0 opacity-100'
+            }`}
+          >
+            <HuntQueueTable
+              view={renderedView}
+              prospects={data?.prospects ?? []}
+              accounts={data?.accounts ?? []}
+              isLoading={isLoading}
+              onClearFilters={clearFilters}
+            />
+          </div>
         </section>
       ) : null}
       {activeTab === 'activate' ? <ActivatePanel /> : null}
