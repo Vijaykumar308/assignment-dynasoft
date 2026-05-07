@@ -1,7 +1,6 @@
 import { Archive, ArrowUpDown, MoreHorizontal } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { prospects } from '../../data/prospects'
-import type { Prospect } from '../../types'
+import type { Account, DashboardView, Prospect } from '../../types'
 import { Avatar } from '../ui/Avatar'
 import { SignalPill } from '../ui/SignalPill'
 import { StageBadge } from '../ui/StageBadge'
@@ -22,6 +21,15 @@ const headerCells: HeaderCell[] = [
   { label: 'Actions' },
 ]
 
+const accountHeaderCells = [
+  'Company Name',
+  'Domain',
+  'Size',
+  'Industry',
+  'Signals',
+  'Recommended Action',
+]
+
 function sortProspects(items: Prospect[], sortKey: SortKey) {
   return [...items].sort((first, second) => {
     if (sortKey === 'signal') {
@@ -32,14 +40,22 @@ function sortProspects(items: Prospect[], sortKey: SortKey) {
   })
 }
 
-export function HuntQueueTable() {
+interface HuntQueueTableProps {
+  view: DashboardView
+  prospects: Prospect[]
+  accounts: Account[]
+}
+
+export function HuntQueueTable({ view, prospects, accounts }: HuntQueueTableProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [sortKey, setSortKey] = useState<SortKey>('signal')
   const sortedProspects = useMemo(() => sortProspects(prospects, sortKey), [sortKey])
-  const isAllSelected = selectedIds.length === prospects.length
+  const isContactsView = view === 'contacts'
+  const visibleIds = isContactsView ? prospects.map((prospect) => prospect.id) : accounts.map((account) => account.id)
+  const isAllSelected = visibleIds.length > 0 && selectedIds.length === visibleIds.length
 
   const toggleAll = () => {
-    setSelectedIds(isAllSelected ? [] : prospects.map((prospect) => prospect.id))
+    setSelectedIds(isAllSelected ? [] : visibleIds)
   }
 
   const toggleRow = (id: string) => {
@@ -70,40 +86,56 @@ export function HuntQueueTable() {
               <th className="px-4 py-3 text-left">
                 <input
                   type="checkbox"
-                  aria-label="Select all prospects"
+                  aria-label={`Select all ${isContactsView ? 'prospects' : 'accounts'}`}
                   checked={isAllSelected}
                   onChange={toggleAll}
                   className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                 />
               </th>
-              {headerCells.map((cell) => {
-                const sortableKey = cell.sortKey
+              {isContactsView
+                ? headerCells.map((cell) => {
+                    const sortableKey = cell.sortKey
 
-                return (
+                    return (
+                      <th
+                        key={cell.label}
+                        className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500"
+                      >
+                        {sortableKey ? (
+                          <button
+                            type="button"
+                            onClick={() => setSortKey(sortableKey)}
+                            className="inline-flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          >
+                            {cell.label}
+                            <ArrowUpDown className="h-3.5 w-3.5" aria-hidden="true" />
+                          </button>
+                        ) : (
+                          cell.label
+                        )}
+                      </th>
+                    )
+                  })
+                : accountHeaderCells.map((cell) => (
                   <th
-                    key={cell.label}
+                    key={cell}
                     className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500"
                   >
-                    {sortableKey ? (
-                      <button
-                        type="button"
-                        onClick={() => setSortKey(sortableKey)}
-                        className="inline-flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      >
-                        {cell.label}
-                        <ArrowUpDown className="h-3.5 w-3.5" aria-hidden="true" />
-                      </button>
-                    ) : (
-                      cell.label
-                    )}
+                    {cell}
                   </th>
-                )
-              })}
+                ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {sortedProspects.map((prospect) => (
-              <tr key={prospect.id} className="hover:bg-gray-50">
+            {visibleIds.length === 0 ? (
+              <tr>
+                <td colSpan={isContactsView ? headerCells.length + 1 : accountHeaderCells.length + 1} className="px-4 py-10 text-center text-sm text-gray-500">
+                  No {isContactsView ? 'contacts' : 'accounts'} match the current search and filters.
+                </td>
+              </tr>
+            ) : isContactsView ? (
+              sortedProspects.map((prospect) => (
+                <tr key={prospect.id} className="hover:bg-gray-50">
                 <td className="px-4 py-3">
                   <input
                     type="checkbox"
@@ -150,7 +182,36 @@ export function HuntQueueTable() {
                   </div>
                 </td>
               </tr>
-            ))}
+              ))
+            ) : (
+              accounts.map((account) => (
+                <tr key={account.id} className="hover:bg-gray-50">
+                <td className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    aria-label={`Select ${account.companyName}`}
+                    checked={selectedIds.includes(account.id)}
+                    onChange={() => toggleRow(account.id)}
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                </td>
+                <td className="px-4 py-3 text-sm font-medium text-gray-900">{account.companyName}</td>
+                <td className="px-4 py-3 text-sm text-gray-600">{account.domain}</td>
+                <td className="px-4 py-3 text-sm text-gray-600">{account.size}</td>
+                <td className="px-4 py-3 text-sm text-gray-600">{account.industry}</td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap gap-2">
+                    {account.signals.map((signal) => (
+                      <SignalPill key={`${account.id}-${signal.label}`} signal={signal} />
+                    ))}
+                  </div>
+                </td>
+                <td className="max-w-xs px-4 py-3 text-sm text-gray-700">
+                  <p className="line-clamp-2">{account.recommendedAction}</p>
+                </td>
+              </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

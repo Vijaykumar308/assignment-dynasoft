@@ -1,6 +1,8 @@
 interface AvatarProps {
   name: string
-  size?: 'sm' | 'md'
+  size?: 'sm' | 'md' | 'lg'
+  colorClassName?: string
+  fallback?: string
 }
 
 const avatarColors = [
@@ -25,15 +27,18 @@ function getColor(name: string) {
   return avatarColors[total % avatarColors.length]
 }
 
-export function Avatar({ name, size = 'md' }: AvatarProps) {
-  const sizeClass = size === 'sm' ? 'h-7 w-7 text-xs' : 'h-8 w-8 text-sm'
+export function Avatar({ name, size = 'md', colorClassName, fallback }: AvatarProps) {
+  const sizeClass =
+    size === 'sm' ? 'h-7 w-7 text-xs' : size === 'lg' ? 'h-10 w-10 text-sm' : 'h-8 w-8 text-sm'
 
   return (
     <span
       aria-label={`${name} avatar`}
-      className={`inline-flex shrink-0 items-center justify-center rounded-full font-medium ${sizeClass} ${getColor(name)}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full font-medium ${sizeClass} ${
+        colorClassName ?? getColor(name)
+      }`}
     >
-      {getInitials(name)}
+      {fallback ?? getInitials(name)}
     </span>
   )
 }
