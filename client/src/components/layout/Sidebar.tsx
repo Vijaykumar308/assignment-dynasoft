@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { primaryNavigation, resourceNavigation, teamAgents } from '../../data/appData'
 import type { NavItem, User } from '../../types'
 import { Avatar } from '../ui/Avatar'
+import { CreatorAvatar } from '../ui/CreatorAvatar'
 
 interface SidebarProps {
   user: User
@@ -30,6 +31,18 @@ function NavLinkItem({ item, activeRoute }: { item: NavItem; activeRoute: string
       <span className="lg:inline md:hidden">{item.label}</span>
     </Link>
   )
+}
+
+function AgentAvatar({ name }: { name: string }) {
+  if (name === 'Sarah') {
+    return <CreatorAvatar size="md" tone="warm" />
+  }
+
+  if (name === 'Rocky' || name === 'Chloe') {
+    return <CreatorAvatar size="md" tone={name === 'Rocky' ? 'deep' : 'gold'} />
+  }
+
+  return <Avatar name={name} />
 }
 
 export function Sidebar({ user, activeRoute, isOpen = false, onClose }: SidebarProps) {
@@ -76,7 +89,7 @@ export function Sidebar({ user, activeRoute, isOpen = false, onClose }: SidebarP
                 title={`${agent.name} - ${agent.role}`}
                 className="flex items-center gap-3 rounded-lg py-2 text-left transition-colors duration-150 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                <Avatar name={agent.name} />
+                <AgentAvatar name={agent.name} />
                 <span className="md:hidden lg:inline">
                   <span className="block text-sm font-medium text-gray-900">{agent.name}</span>
                   <span className="block text-xs text-gray-400">{agent.role}</span>
@@ -120,8 +133,7 @@ export function Sidebar({ user, activeRoute, isOpen = false, onClose }: SidebarP
           className="flex w-full items-center gap-3 rounded-lg text-left focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
           <span className="relative">
-            <Avatar name={user.name} size="sm" />
-            <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-green-600 ring-2 ring-white" />
+            <CreatorAvatar size="sm" tone="warm" status={user.status} />
           </span>
           <span className="text-sm font-medium text-gray-900 md:hidden lg:inline">{user.name}</span>
         </button>
