@@ -1,15 +1,20 @@
+import { Navigate, Route, Routes } from 'react-router-dom'
+import { PageLayout } from './components/layout/PageLayout'
+import { Dashboard } from './pages/Dashboard'
+import { PlaceholderPage } from './pages/PlaceholderPage'
+
 export function App() {
   return (
-    <main className="min-h-screen bg-gray-50 font-['Inter',system-ui,sans-serif] text-gray-900">
-      <section className="mx-auto flex min-h-screen max-w-5xl flex-col items-center justify-center gap-4 px-6 text-center">
-        <p className="text-sm font-medium text-indigo-600">NXL</p>
-        <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-          Outbound Engine Prospect Dashboard
-        </h1>
-        <p className="max-w-2xl text-sm text-gray-600">
-          Vite, React 18, TypeScript strict mode, and Tailwind CSS are ready for Step 2.
-        </p>
-      </section>
-    </main>
+    <Routes>
+      <Route element={<PageLayout />}>
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/analytics" element={<PlaceholderPage />} />
+        <Route path="/knowledge-base" element={<PlaceholderPage />} />
+        <Route path="/marketing-events" element={<PlaceholderPage />} />
+        <Route path="/agents/:agentId/settings" element={<PlaceholderPage />} />
+        <Route path="/profile" element={<PlaceholderPage />} />
+      </Route>
+    </Routes>
   )
 }
